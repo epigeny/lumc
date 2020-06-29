@@ -282,7 +282,7 @@ opal.logout(o)</code></pre>
 <p>In this method, all data processing is done in the R server session. It is less convenient when exploring data, but is preferable when systematically applying a data proccess because it avoids transferring data to/from client and server R sessions.</p>
 <div id="assign-datasets" class="section level3">
 <h3>Assign Datasets</h3>
-<p>Retrieve the data stored in Opal as tibbles in the local R session.</p>
+<p>Assign the data stored in Opal as tibbles in the remote R session.</p>
 <pre class="r"><code>o &lt;- opal.login(username = &quot;administrator&quot;, password = &quot;password&quot;, url = opal_url)
 opal.assign.table.tibble(o, &quot;lab&quot;, &quot;lumc.lab&quot;)
 opal.assign.table.tibble(o, &quot;medication&quot;, &quot;lumc.medication&quot;)

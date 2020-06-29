@@ -109,7 +109,7 @@ In this method, all data processing is done in the R server session. It is less 
 
 ### Assign Datasets
 
-Retrieve the data stored in Opal as tibbles in the local R session.
+Assign the data stored in Opal as tibbles in the remote R session.
 
 ```{r assign}
 o <- opal.login(username = "administrator", password = "password", url = opal_url)
