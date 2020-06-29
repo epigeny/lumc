@@ -134,7 +134,7 @@ opal.assign.script(o, "patient_lab", quote(merge(x = lab, y = patient, by = "id"
 Another option is to use the `opal.execute.source()` function:
 
 ```{r eval=FALSE}
-# the merge.R file, located in the Opal file system contains all the data processing code
+# the merge.R file, located in the Opal file system is expected to contain all the data processing code
 opal.execute.source(o, "/projects/lumc/merge.R")
 ```
 
