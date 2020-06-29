@@ -1,0 +1,153 @@
+---
+title: "Merge"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(opalr)
+#opal_url <- "http://localhost:8080"
+opal_url <- "https://opal-demo.obiba.org"
+```
+
+## Method 1
+
+In this method, all data processing is done in the R client session.
+
+### Extract Datasets
+
+Retrieve the data stored in Opal as tibbles in the local R session.
+
+```{r extract}
+o <- opal.login(username = "administrator", password = "password", url = opal_url)
+lab <- harmo.table_get(o, "lumc", "lab")
+medication <- harmo.table_get(o, "lumc", "medication")
+patient <- harmo.table_get(o, "lumc", "patient")
+```
+
+### Merge Datasets
+
+Merge by joining datasets. See tutorial on how to [Join in R](http://www.datasciencemadesimple.com/join-in-r-merge-in-r/).
+
+You need to choose what kind of join makes more sense for you:
+
+* inner join:
+
+```{r inner_med}
+inner_medication <- merge(x = medication, y = patient, by = "id")
+inner_medication
+```
+
+* outer join:
+
+```{r outer_med}
+outer_medication <- merge(x = medication, y = patient, by = "id", all = TRUE)
+outer_medication
+```
+
+For the lab results, you need to define same **id** column in both datasets that will represent the patient ID:
+
+```{r prepare_lab}
+# rename id
+names(lab)[1] <- "sample_id"
+# rename patient_id
+names(lab)[2] <- "id"
+lab
+```
+
+Then do the join:
+
+* inner join:
+
+```{r inner_lab}
+inner_lab <- merge(x = lab, y = patient, by = "id")
+inner_lab
+```
+
+* outer join:
+
+```{r outer_lab}
+outer_lab <- merge(x = lab, y = patient, by = "id", all = TRUE)
+outer_lab
+```
+
+
+### Save Datasets
+
+Prepare datasets dictionaries.
+
+```{r dico}
+# make tibbles instead of data.frames before saving
+inner_medication <- tibble::as_tibble(inner_medication)
+outer_medication <- tibble::as_tibble(outer_medication)
+inner_lab <- tibble::as_tibble(inner_lab)
+outer_lab <- tibble::as_tibble(outer_lab)
+
+# note that it is possible to tweak a bit the data dictionary to help Opal in interpreting the data  
+attributes(outer_lab$IL6) <- list("opal.occurrence_group" = "lab")
+attributes(outer_lab$IL6_date) <- list("opal.occurrence_group" = "lab")
+attributes(outer_lab$sample_id) <- list("opal.occurrence_group" = "lab")
+attributes(outer_lab$Age) <- list("opal.repeatable" = 0)
+```
+
+Upload datasets and save.
+
+```{r save}
+harmo.table_save(o, inner_medication, "lumc", "inner_medication", overwrite = TRUE, force = TRUE)
+harmo.table_save(o, outer_medication, "lumc", "outer_medication", overwrite = TRUE, force = TRUE)
+harmo.table_save(o, inner_lab, "lumc", "inner_lab", overwrite = TRUE, force = TRUE)
+harmo.table_save(o, outer_lab, "lumc", "outer_lab", overwrite = TRUE, force = TRUE)
+
+# clean up
+opal.logout(o)
+```
+
+## Method 2
+
+In this method, all data processing is done in the R server session. It is less convenient when exploring data, but is preferable when systematically applying a data proccess because it avoids transferring data to/from client and server R sessions.
+
+### Assign Datasets
+
+Retrieve the data stored in Opal as tibbles in the local R session.
+
+```{r assign}
+o <- opal.login(username = "administrator", password = "password", url = opal_url)
+opal.assign.table.tibble(o, "lab", "lumc.lab")
+opal.assign.table.tibble(o, "medication", "lumc.medication")
+opal.assign.table.tibble(o, "patient", "lumc.patient")
+opal.symbols(o)
+```
+### Merge Datasets
+
+Do merge operations:
+
+```{r assign_merge}
+# merge medication with patient
+opal.assign.script(o, "patient_medication", quote(merge(x = medication, y = patient, by = "id", all = TRUE)))
+# rename lab columns and merge lab with patient
+opal.execute(o, 'names(lab)[1] <- "sample_id"')
+opal.execute(o, 'names(lab)[2] <- "id"')
+opal.assign.script(o, "patient_lab", quote(merge(x = lab, y = patient, by = "id", all = TRUE)))
+```
+
+Another option is to use the `opal.execute.source()` function:
+
+```{r eval=FALSE}
+# the merge.R file, located in the Opal file system contains all the data processing code
+opal.execute.source(o, "/projects/lumc/merge.R")
+```
+
+### Save datasets
+
+Upload datasets and save.
+
+```{r save2}
+opal.assign.script(o, "patient_medication", quote(tibble::as_tibble(patient_medication)))
+opal.symbol_import(o, "patient_medication", "lumc")
+opal.assign.script(o, "patient_lab", quote(tibble::as_tibble(patient_lab)))
+opal.symbol_import(o, "patient_lab", "lumc")
+
+# clean up
+opal.logout(o)
+```
