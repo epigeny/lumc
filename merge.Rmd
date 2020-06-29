@@ -140,7 +140,7 @@ opal.execute.source(o, "/projects/lumc/merge.R")
 
 ### Save datasets
 
-Upload datasets and save.
+Perpare datasets and save.
 
 ```{r save2}
 opal.assign.script(o, "patient_medication", quote(tibble::as_tibble(patient_medication)))

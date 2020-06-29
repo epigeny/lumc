@@ -307,7 +307,7 @@ opal.execute.source(o, &quot;/projects/lumc/merge.R&quot;)</code></pre>
 </div>
 <div id="save-datasets-1" class="section level3">
 <h3>Save datasets</h3>
-<p>Upload datasets and save.</p>
+<p>Perpare datasets and save.</p>
 <pre class="r"><code>opal.assign.script(o, &quot;patient_medication&quot;, quote(tibble::as_tibble(patient_medication)))
 opal.symbol_import(o, &quot;patient_medication&quot;, &quot;lumc&quot;)
 opal.assign.script(o, &quot;patient_lab&quot;, quote(tibble::as_tibble(patient_lab)))
